@@ -33,6 +33,17 @@ if uploaded_file is not None:
     X = data[feature_column]
     y = data[target_column]
 
+    # Optional Label Encoding
+    label_encoding = st.sidebar.checkbox("Label Encoding (Optional)")
+
+    if label_encoding:
+    # Check if target column is categorical
+        if y.dtype == 'object':
+            from sklearn.preprocessing import LabelEncoder
+            le = LabelEncoder()
+            y = le.fit_transform(y)
+            st.sidebar.write("Label Encoding applied to the target variable (y).")
+
     #One-hot encoding
     categorical_features = X.select_dtypes(include=['object']).columns.tolist()
     if st.sidebar.checkbox("One-Hot Encoding"):
@@ -139,16 +150,26 @@ if uploaded_file is not None:
             st.subheader("Save Model")
             save_option = st.radio("Select the format to save the model", ("joblib", "pickle"))
 
-            if save_option == "joblib":
-                model_filename = "tuned_model.joblib"
-                joblib.dump(model, model_filename)
-                st.write(f"The tuned model has been saved as {model_filename}")
+            # Get the desired file path from the user
+            file_path = st.text_input("Enter the desired file path (e.g., C:/path/to/save/folder/)", key="file_path")
 
-            elif save_option == "pickle":
-                model_filename = "tuned_model.pkl"
-                with open(model_filename, 'wb') as file:
-                    pickle.dump(model, file)
-                    st.write(f"The tuned model has been saved as {model_filename}")
+            if st.button("Save Model"):
+                if save_option == "joblib":
+                    if file_path:
+                        model_filename = f"{file_path}/tuned_model.joblib"
+                        joblib.dump(model, model_filename)
+                        st.write(f"The tuned model has been saved as {model_filename}")
+                    else:
+                        st.warning("Please enter a valid file path.")
+
+                elif save_option == "pickle":
+                    if file_path:
+                        model_filename = f"{file_path}/tuned_model.pkl"
+                        with open(model_filename, 'wb') as file:
+                            pickle.dump(model, file)
+                            st.write(f"The tuned model has been saved as {model_filename}")
+                    else:
+                        st.warning("Please enter a valid file path.")
             
             # Generate confusion matrix
             st.subheader("Confusion Matrix")
